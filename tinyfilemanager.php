@@ -11,7 +11,7 @@ $CONFIG = '{"lang":"en","error_reporting":false,"show_hidden":false,"hide_Cols":
  */
 
 //TFM version
-define('VERSION', '2.5.3');
+define('VERSION', '2.5.3a');
 
 //Application Title
 define('APP_TITLE', 'Tiny File Manager');
@@ -1775,7 +1775,15 @@ if (isset($_GET['view'])) {
                             class="edit-file"><i class="fa fa-pencil-square-o"></i> <?php echo lng('AdvancedEditor') ?>
                         </a></b> &nbsp;
                 <?php } ?>
-                <b class="ms-2"><a href="?p=<?php echo urlencode(FM_PATH) ?>"><i class="fa fa-chevron-circle-left go-back"></i> <?php echo lng('Back') ?></a></b>
+                <b class="ms-2"><a href="?p=<?php echo urlencode(FM_PATH) ?>"><i class="fa fa-chevron-circle-left go-back"></i> <?php echo lng('Back') ?>
+                    </a></b> &nbsp;
+                <!-- added! -->
+                <div class="myHorizontalgap" style="width:20px"></div>
+                <?php if (!FM_READONLY) { ?>
+                <b class="ms-2"><a href="?p=<?php echo urlencode(FM_PATH) ?>&amp;del=<?php echo urlencode($file) ?>"  onclick="confirmDailog(event, '1028','<?php echo lng('Delete').' '.lng('File'); ?>','<?php echo urlencode($file) ?>', this.href);">
+                        <i class="fa fa-trash fa-lg"></i>  <?php echo lng('Delete') ?>
+                    </a></b>
+                <?php } ?>
             </div>
             <?php
             if($is_onlineViewer) {
