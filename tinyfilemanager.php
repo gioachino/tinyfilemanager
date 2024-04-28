@@ -274,6 +274,7 @@ defined('FM_SELF_URL') || define('FM_SELF_URL', ($is_https ? 'https' : 'http') .
 // logout
 if (isset($_GET['logout'])) {
     unset($_SESSION[FM_SESSION_ID]['logged']);
+    unset($_SESSION[FM_SESSION_ID]['order']);   // new
     unset( $_SESSION['token']); 
     fm_redirect(FM_SELF_URL);
 }
@@ -662,6 +663,13 @@ if ((isset($_SESSION[FM_SESSION_ID]['logged'], $auth_users[$_SESSION[FM_SESSION_
         }
     }
     exit();
+}
+
+// added: reorder: memorize table ordering in session
+if (isset($_POST['order'], $_POST['token'])) {
+    $_SESSION[FM_SESSION_ID]['order'] = $_POST['order'];
+    //fm_set_msg($_SESSION[FM_SESSION_ID]['order']);
+    fm_redirect(FM_SELF_URL . '?p=' . urlencode(FM_PATH));
 }
 
 // Delete file / folder
@@ -3995,6 +4003,7 @@ $isStickyNavBar = $sticky_navbar ? 'navbar-fixed' : 'navbar-normal';
     function fm_show_footer()
     {
     ?>
+        <form id="reorder" method="post"></form>
 </div>
 <?php print_external('js-jquery'); ?>
 <?php print_external('js-bootstrap'); ?>
@@ -4146,8 +4155,36 @@ $isStickyNavBar = $sticky_navbar ? 'navbar-fixed' : 'navbar-normal';
         var $table = $('#main-table'),
             tableLng = $table.find('th').length,
             _targets = (tableLng && tableLng == 7 ) ? [0, 4,5,6] : tableLng == 5 ? [0,4] : [3];
-            mainTable = $('#main-table').DataTable({paging: false, info: false, order: [], columnDefs: [{targets: _targets, orderable: false}]
+
+        <?php
+            if (isset($_SESSION[FM_SESSION_ID]['order'])) {
+                echo "var withOrdering = true, _order = "; echo $_SESSION[FM_SESSION_ID]['order']; echo ";\n";
+            }else{
+                echo "var withOrdering = false, _order = '';\n";
+            }
+        ?>
+
+        // columnDefs: disable sorting on some columns
+        if (withOrdering) {
+            console.log('with ordering');
+            var mainTable = $('#main-table').DataTable({paging: false, info: false, order: _order, columnDefs: [{targets: _targets, orderable: false}]});
+        }else{
+            console.log('w/o ordering');
+            var mainTable = $('#main-table').DataTable({paging: false, info: false, columnDefs: [{targets: _targets, orderable: false}]});
+        }
+
+        mainTable.on('order', function () {
+            var order = mainTable.order();
+            console.log('Table has been reordered:' + order);
+            var form = document.getElementById("reorder");
+            form.method = "post";
+            form.action = "";
+            var orderStr = "[" + order[0][0] + ",'" + order[0][1] + "']";
+            form.innerHTML =  '<input type="hidden" name="order" value="' + orderStr + '">';
+            form.innerHTML += '<input type="hidden" name="token" value="<?php echo $_SESSION['token']; ?>">';
+            form.submit();
         });
+
         // filter table
         $('#search-addon').on( 'keyup', function () {
             mainTable.search( this.value ).draw();
